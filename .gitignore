@@ -1,0 +1,37 @@
+# Object files and Fortran modules
+*.o
+*.mod
+*.smod
+*.a
+*.so
+*.dylib
+*.dll
+*.exe
+
+# Build directories
+build/
+bin/
+dist/
+target/
+.cache/
+
+# Test outputs and transient logs
+*.log
+*.tmp
+*.dat
+*.vtk.tmp
+*.h5.tmp
+
+# Python artifacts
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.pytest_cache/
+.venv/
+env/
+venv/
+
+# System files
+.DS_Store
+Thumbs.db
