@@ -18,13 +18,13 @@ module umbra_math
   public :: solve_brent
 
   abstract interface
-    pure function scalar_func_1d(x) result(f)
+    function scalar_func_1d(x) result(f)
       import :: dp
       real(dp), intent(in) :: x
       real(dp) :: f
     end function scalar_func_1d
 
-    pure subroutine scalar_func_and_deriv_1d(x, f, df)
+    subroutine scalar_func_and_deriv_1d(x, f, df)
       import :: dp
       real(dp), intent(in) :: x
       real(dp), intent(out) :: f
