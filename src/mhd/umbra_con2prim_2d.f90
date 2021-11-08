@@ -95,8 +95,8 @@ contains
         dw = -0.5_dp * f2
         dv2 = -0.1_dp * f1 / max(df1_dv2, 1.0e-12_dp)
       else
-        dw = -( f2 * df1_dv2 - f1 * df2_dv2) / det_j
-        dv2 = -(-f2 * df1_dw  + f1 * df2_dw) / det_j
+        dw  = (df1_dv2 * f2 - df2_dv2 * f1) / det_j
+        dv2 = (df2_dw  * f1 - df1_dw  * f2) / det_j
       end if
 
       ! Backtracking line search / step limiter

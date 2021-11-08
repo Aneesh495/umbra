@@ -306,7 +306,10 @@ contains
         dx = f / df
         x = root
         root = root - dx
-        if (abs(x - root) <= EPSILON_DP * max(1.0_dp, abs(root))) exit
+        if (abs(x - root) <= EPSILON_DP * max(1.0_dp, abs(root))) then
+          if (present(err)) call err%clear()
+          return
+        end if
       end if
 
       if (abs(dx) < target_tol .or. abs(f) < target_tol) then

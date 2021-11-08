@@ -184,7 +184,7 @@ contains
     type(cons_state_t), intent(out) :: u
     type(umbra_error_t), intent(inout), optional :: err
 
-    real(dp) :: gamma, eps, h, b2, w, b_dot_v
+    real(dp) :: gamma, eps, h, b2, w, b_dot_v, b_mag_sq, v_sq
     real(dp), dimension(3) :: v_down, b_down
     integer(i4) :: i, j
 
@@ -222,14 +222,22 @@ contains
     ! D = gamma * rho
     u%d = gamma * p%rho
 
-    ! S_i = (W + b^2 * gamma^2) v_i - (alpha b^0) b_i = (W + B^2) v_i - (B . v) B_i
+    b_mag_sq = 0.0_dp
+    do j = 1, 3
+      do i = 1, 3
+        b_mag_sq = b_mag_sq + m%gamma_down(i, j) * p%b(i) * p%b(j)
+      end do
+    end do
+
+    ! S_i = (W + B^2) v_i - (B . v) B_i
     do i = 1, 3
-      u%s(i) = (w + b2 * gamma * gamma) * v_down(i) - (gamma * b_dot_v) * b_down(i)
+      u%s(i) = (w + b_mag_sq) * v_down(i) - b_dot_v * b_down(i)
     end do
 
     ! tau = (W - p) + b^2 * gamma^2 - 0.5 * b^2 - (alpha b^0)^2 - D
     !     = W - p + 0.5 * b^2 * (2 gamma^2 - 1) - (gamma * b_dot_v)^2 - D
-    u%tau = (w - p%p) + 0.5_dp * b2 * (2.0_dp * gamma * gamma - 1.0_dp) - (gamma * b_dot_v)**2 - u%d
+    v_sq = max(1.0_dp - 1.0_dp / (gamma * gamma), 0.0_dp)
+    u%tau = (w - p%p) + 0.5_dp * b_mag_sq * (1.0_dp + v_sq) - 0.5_dp * (b_dot_v**2) - u%d
 
     ! B^i remains invariant
     u%b = p%b
