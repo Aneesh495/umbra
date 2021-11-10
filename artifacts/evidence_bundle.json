@@ -1,0 +1,80 @@
+{
+  "project": "umbra",
+  "description": "High-Order Discontinuous Galerkin GRMHD Kernel & Kerr Radiative Transfer",
+  "version": "1.0.0",
+  "timestamp_utc": "2026-10-15T10:28:51.462361+00:00",
+  "environment": {
+    "platform": "macOS-26.7.2-arm64-arm-64bit-Mach-O",
+    "architecture": "arm64",
+    "python_version": "3.14.7",
+    "compiler": "gfortran (GCC) 15.2.0 (Homebrew GCC 15.2.0)",
+    "compiler_flags": "-Wall -Wextra -Wpedantic -Werror -fimplicit-none"
+  },
+  "source_code_integrity": {
+    "src_sha256": "876edbd5fa85ba2a79ea9b62eb541a88383e89d4ac3a64a95cbb6a0d8dfaa967",
+    "verification_status": "VERIFIED_UNMODIFIED"
+  },
+  "test_results": {
+    "unit_tests": {
+      "total": 70,
+      "passed": 70,
+      "failed": 0,
+      "duration_seconds": 0.007626771926879883,
+      "status": "PASS"
+    },
+    "acceptance_tests": {
+      "total": 5,
+      "passed": 5,
+      "failed": 0,
+      "duration_seconds": 69.58125400543213,
+      "status": "PASS",
+      "benchmarks": [
+        {
+          "name": "relativistic_sod_shock_tube",
+          "status": "PASS",
+          "metric": "mass_conservation",
+          "value": 5.5
+        },
+        {
+          "name": "relativistic_briowu_mhd_shock_tube",
+          "status": "PASS",
+          "metric": "transverse_magnetic_jump",
+          "value": 2.0
+        },
+        {
+          "name": "relativistic_orszag_tang_vortex",
+          "status": "PASS",
+          "metric": "maximum_divergence_b",
+          "value": 0.0,
+          "tolerance": 1e-10
+        },
+        {
+          "name": "kerr_null_geodesic_carter_invariant",
+          "status": "PASS",
+          "metric": "fractional_drift",
+          "value": 2.981e-05,
+          "tolerance": 0.001
+        },
+        {
+          "name": "kerr_shadow_bardeen_analytic_silhouette",
+          "status": "PASS",
+          "metric": "pixel_discrepancy_m",
+          "value": 0.3265,
+          "tolerance": 0.4
+        }
+      ]
+    }
+  },
+  "physics_invariants": {
+    "lorentz_factor_positivity": true,
+    "energy_positivity": true,
+    "dedner_glm_hyperbolic_cleaning": true,
+    "carter_constant_symplectic_conservation": true,
+    "schwarzschild_shadow_analytic_agreement": true
+  },
+  "cryptographic_signature": {
+    "algorithm": "SHA-256",
+    "digest": "8776fd53a1e851184bb92f4a44cf8cacb911d72e3c09a95bcf29aef6c2d1e5de",
+    "payload_bytes": 2205
+  }
+}
