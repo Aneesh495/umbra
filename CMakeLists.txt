@@ -8,8 +8,8 @@ project(umbra
 set(CMAKE_Fortran_STANDARD 2018)
 set(CMAKE_Fortran_STANDARD_REQUIRED ON)
 
-set(CMAKE_Fortran_MODULE_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include)
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
+set(CMAKE_Fortran_MODULE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/modules")
+file(MAKE_DIRECTORY "${CMAKE_Fortran_MODULE_DIRECTORY}")
 
 if(CMAKE_Fortran_COMPILER_ID MATCHES "GNU")
     add_compile_options(-O3 -Wall -Wextra -Wpedantic -Werror -Wno-error=unused-dummy-argument -fimplicit-none -fPIC)
@@ -90,13 +90,18 @@ set(CORE_SOURCES
 
 # Shared Library
 add_library(umbra_shared SHARED ${CORE_SOURCES})
+target_include_directories(umbra_shared PUBLIC
+    "${CMAKE_CURRENT_SOURCE_DIR}/include"
+    "${CMAKE_Fortran_MODULE_DIRECTORY}"
+)
 set_target_properties(umbra_shared PROPERTIES
     OUTPUT_NAME "umbra"
     LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/lib
 )
 
 # Executable Driver
-add_executable(umbra_bin ${CORE_SOURCES} src/driver/umbra_main.f90)
+add_executable(umbra_bin src/driver/umbra_main.f90)
+target_link_libraries(umbra_bin PRIVATE umbra_shared)
 set_target_properties(umbra_bin PROPERTIES
     OUTPUT_NAME "umbra"
     RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/bin
@@ -118,19 +123,22 @@ set(UNIT_TEST_SOURCES
     tests/unit/test_unit_runner.f90
 )
 
-add_executable(test_unit_runner ${CORE_SOURCES} ${UNIT_TEST_SOURCES})
+add_executable(test_unit_runner ${UNIT_TEST_SOURCES})
+target_link_libraries(test_unit_runner PRIVATE umbra_shared)
 set_target_properties(test_unit_runner PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/bin
 )
 add_test(NAME UnitTests COMMAND test_unit_runner)
 
-add_executable(test_acceptance_runner ${CORE_SOURCES} tests/acceptance/test_acceptance_runner.f90)
+add_executable(test_acceptance_runner tests/acceptance/test_acceptance_runner.f90)
+target_link_libraries(test_acceptance_runner PRIVATE umbra_shared)
 set_target_properties(test_acceptance_runner PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/bin
 )
 add_test(NAME AcceptanceTests COMMAND test_acceptance_runner)
 
-add_executable(test_negative_controls ${CORE_SOURCES} tests/negative/test_negative_controls.f90)
+add_executable(test_negative_controls tests/negative/test_negative_controls.f90)
+target_link_libraries(test_negative_controls PRIVATE umbra_shared)
 set_target_properties(test_negative_controls PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/bin
 )
