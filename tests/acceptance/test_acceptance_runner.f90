@@ -81,6 +81,7 @@ contains
     if (abs(rho_left - 10.0_dp) < 1.0e-12_dp .and. abs(rho_right - 1.0_dp) < 1.0e-12_dp .and. &
         mass_initial > 0.0_dp) then
       write(*, '(A, E12.4, A)') "  PASS: Sod shock tube initialized (Initial Mass = ", mass_initial, ")"
+      write(*, '(A, ES24.16E3)') "METRIC sod_initial_mass ", mass_initial
     else
       write(*, '(A)') "  FAIL: Sod shock tube initial condition mismatch"
       passed = .false.
@@ -105,6 +106,7 @@ contains
 
     if (abs(by_left - 1.0_dp) < 1.0e-12_dp .and. abs(by_right - (-1.0_dp)) < 1.0e-12_dp) then
       write(*, '(A)') "  PASS: Brio-Wu magnetized initial conditions verified (Transverse B jump = 2.0)"
+      write(*, '(A, ES24.16E3)') "METRIC briowu_transverse_jump ", by_left - by_right
     else
       write(*, '(A)') "  FAIL: Brio-Wu magnetic jump error"
       passed = .false.
@@ -140,6 +142,7 @@ contains
     ! Orszag-Tang initial condition is analytical divergence-free div(B) = 0
     if (max_div < 1.0e-10_dp) then
       write(*, '(A, E12.4, A)') "  PASS: Orszag-Tang divergence-free initial state (max div B = ", max_div, ")"
+      write(*, '(A, ES24.16E3)') "METRIC orszag_tang_initial_divergence ", max_div
     else
       write(*, '(A, E12.4, A)') "  FAIL: Orszag-Tang initial state has non-zero divergence (max div B = ", max_div, ")"
       passed = .false.
@@ -185,7 +188,8 @@ contains
     drift = abs(q_final - q_init) / max(abs(q_init), 1.0e-12_dp)
 
     if (drift < 1.0e-3_dp) then
-      write(*, '(A, E12.4, A)') "  PASS: Kerr symplectic null geodesic Carter invariant (drift = ", drift, ")"
+      write(*, '(A, E12.4, A)') "  PASS: Kerr null geodesic Carter invariant (drift = ", drift, ")"
+      write(*, '(A, ES24.16E3)') "METRIC carter_drift ", drift
     else
       write(*, '(A, E12.4, A)') "  FAIL: Excessive Carter constant drift: ", drift
       passed = .false.
@@ -201,6 +205,7 @@ contains
 
     if (test_passed) then
       write(*, '(A, E12.4, A)') "  PASS: Ray-traced shadow matches Schwarzschild 3*sqrt(3) radius (discrepancy = ", max_err, ")"
+      write(*, '(A, ES24.16E3)') "METRIC shadow_discrepancy ", max_err
     else
       write(*, '(A, E12.4, A)') "  FAIL: Ray-traced shadow discrepancy exceeded tolerance: ", max_err
       passed = .false.

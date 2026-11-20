@@ -56,8 +56,9 @@ contains
     dv2_dw = -2.0_dp * (g_s2 * w_sq * w_plus_b2 + s_dot_b_sq * (3.0_dp * w * w_plus_b2 + g_b2 * w_plus_b2 + w * g_b2)) &
              / max(w_sq * w * (w_plus_b2**3), 1.0e-30_dp)
     dgamma_dw = 0.5_dp * (gamma**3) * dv2_dw
-    dp_dw = ((g_gamma_eos - 1.0_dp) / g_gamma_eos) * (1.0_dp / (gamma * gamma) - 2.0_dp * (w - gamma * g_d) * dgamma_dw / (gamma**3) &
-            - g_d * dgamma_dw / (gamma * gamma))
+    dp_dw = ((g_gamma_eos - 1.0_dp) / g_gamma_eos) * &
+            (1.0_dp / (gamma * gamma) - 2.0_dp * (w - gamma * g_d) * dgamma_dw / (gamma**3) &
+             - g_d * dgamma_dw / (gamma * gamma))
 
     df = 1.0_dp - dp_dw + 0.5_dp * g_b2 * dv2_dw + s_dot_b_sq / max(w_sq * w, 1.0e-30_dp)
   end subroutine con2prim_1d_residual_and_deriv

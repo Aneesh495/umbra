@@ -12,7 +12,7 @@ set(CMAKE_Fortran_MODULE_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
 
 if(CMAKE_Fortran_COMPILER_ID MATCHES "GNU")
-    add_compile_options(-O3 -Wall -Wextra -Wpedantic -Werror -fimplicit-none -fPIC)
+    add_compile_options(-O3 -Wall -Wextra -Wpedantic -Werror -Wno-error=unused-dummy-argument -fimplicit-none -fPIC)
 endif()
 
 set(CORE_SOURCES

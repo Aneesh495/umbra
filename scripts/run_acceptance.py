@@ -4,7 +4,10 @@ umbra: Automated acceptance test pipeline and cryptographic evidence bundle gene
 Executes unit tests, acceptance tests, gathers physics metrics, and produces artifacts/evidence_bundle.json.
 """
 
+import argparse
+import math
 import os
+import re
 import sys
 import json
 import time
@@ -12,20 +15,13 @@ import hashlib
 import platform
 import subprocess
 from datetime import datetime, timezone
-from typing import Dict, Any, List
+from pathlib import Path
 
-def run_command(cmd: List[str], cwd: str) -> Tuple_Output:
+def run_command(cmd: list[str], cwd: str) -> tuple[int, str, str, float]:
     start_time = time.time()
     proc = subprocess.run(cmd, cwd=cwd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
     duration = time.time() - start_time
     return proc.returncode, proc.stdout, proc.stderr, duration
-
-class Tuple_Output:
-    def __init__(self, code: int, stdout: str, stderr: str, duration: float):
-        self.code = code
-        self.stdout = stdout
-        self.stderr = stderr
-        self.duration = duration
 
 def compute_dir_hash(root_dir: str) -> str:
     hasher = hashlib.sha256()
@@ -39,8 +35,9 @@ def compute_dir_hash(root_dir: str) -> str:
 
 def main():
     root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-    artifacts_dir = os.path.join(root, "artifacts")
-    os.makedirs(artifacts_dir, exist_ok=True)
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--output", type=Path, default=Path(root) / "artifacts/evidence_bundle.json")
+    output = parser.parse_args().output
 
     print("============================================================")
     print("umbra: Executing Complete Verification Pipeline")
@@ -54,6 +51,10 @@ def main():
         print(out_u)
         print(err_u)
         sys.exit(1)
+    unit_summary = re.search(r"^OVERALL RESULT: (\d+) tests \((\d+) passed, (\d+) failed\)$", out_u, re.MULTILINE)
+    if unit_summary is None or tuple(map(int, unit_summary.groups())) != (70, 70, 0):
+        sys.exit("Unit tests did not report all 70 expected assertions passing")
+    unit_total, unit_passed, unit_failed = map(int, unit_summary.groups())
     print(f"  Unit tests passed in {dur_u:.3f}s.")
 
     # 2. Run Acceptance Tests
@@ -64,6 +65,25 @@ def main():
         print(out_a)
         print(err_a)
         sys.exit(1)
+    expected = {
+        "sod_initial_mass": ("relativistic_sod_shock_tube", "initial_mass", None),
+        "briowu_transverse_jump": ("relativistic_briowu_mhd_shock_tube", "transverse_magnetic_jump", None),
+        "orszag_tang_initial_divergence": ("relativistic_orszag_tang_vortex", "maximum_divergence_b", 1.0e-10),
+        "carter_drift": ("kerr_null_geodesic_carter_invariant", "fractional_drift", 1.0e-3),
+        "shadow_discrepancy": ("kerr_shadow_bardeen_analytic_silhouette", "pixel_discrepancy_m", 0.40),
+    }
+    metric_records = re.findall(r"^METRIC (\w+)[ \t]+(\S+)$", out_a, re.MULTILINE)
+    if len(metric_records) != len(expected) or {key for key, _ in metric_records} != expected.keys():
+        sys.exit("Acceptance tests did not report exactly the five expected measurements")
+    values = {key: float(value) for key, value in metric_records}
+    if not all(math.isfinite(value) for value in values.values()):
+        sys.exit("Acceptance tests reported a non-finite measurement")
+    benchmarks = []
+    for key, (name, metric, tolerance) in expected.items():
+        result = {"name": name, "status": "PASS", "metric": metric, "value": values[key]}
+        if tolerance is not None:
+            result["tolerance"] = tolerance
+        benchmarks.append(result)
     print(f"  Acceptance tests passed in {dur_a:.3f}s.")
 
     # 3. Build Evidence Bundle
@@ -78,8 +98,6 @@ def main():
             "platform": platform.platform(),
             "architecture": platform.machine(),
             "python_version": platform.python_version(),
-            "compiler": "gfortran (GCC) 15.2.0 (Homebrew GCC 15.2.0)",
-            "compiler_flags": "-Wall -Wextra -Wpedantic -Werror -fimplicit-none",
         },
         "source_code_integrity": {
             "src_sha256": source_digest,
@@ -87,61 +105,20 @@ def main():
         },
         "test_results": {
             "unit_tests": {
-                "total": 70,
-                "passed": 70,
-                "failed": 0,
+                "total": unit_total,
+                "passed": unit_passed,
+                "failed": unit_failed,
                 "duration_seconds": dur_u,
                 "status": "PASS",
             },
             "acceptance_tests": {
-                "total": 5,
-                "passed": 5,
+                "total": len(benchmarks),
+                "passed": len(benchmarks),
                 "failed": 0,
                 "duration_seconds": dur_a,
                 "status": "PASS",
-                "benchmarks": [
-                    {
-                        "name": "relativistic_sod_shock_tube",
-                        "status": "PASS",
-                        "metric": "mass_conservation",
-                        "value": 5.500,
-                    },
-                    {
-                        "name": "relativistic_briowu_mhd_shock_tube",
-                        "status": "PASS",
-                        "metric": "transverse_magnetic_jump",
-                        "value": 2.0,
-                    },
-                    {
-                        "name": "relativistic_orszag_tang_vortex",
-                        "status": "PASS",
-                        "metric": "maximum_divergence_b",
-                        "value": 0.0,
-                        "tolerance": 1.0e-10,
-                    },
-                    {
-                        "name": "kerr_null_geodesic_carter_invariant",
-                        "status": "PASS",
-                        "metric": "fractional_drift",
-                        "value": 2.981e-05,
-                        "tolerance": 1.0e-03,
-                    },
-                    {
-                        "name": "kerr_shadow_bardeen_analytic_silhouette",
-                        "status": "PASS",
-                        "metric": "pixel_discrepancy_m",
-                        "value": 0.3265,
-                        "tolerance": 0.40,
-                    },
-                ],
+                "benchmarks": benchmarks,
             },
-        },
-        "physics_invariants": {
-            "lorentz_factor_positivity": True,
-            "energy_positivity": True,
-            "dedner_glm_hyperbolic_cleaning": True,
-            "carter_constant_symplectic_conservation": True,
-            "schwarzschild_shadow_analytic_agreement": True,
         },
     }
 
@@ -154,12 +131,12 @@ def main():
         "payload_bytes": len(payload_bytes),
     }
 
-    out_file = os.path.join(artifacts_dir, "evidence_bundle.json")
-    with open(out_file, 'w', encoding='utf-8') as f:
+    output.parent.mkdir(parents=True, exist_ok=True)
+    with output.open('w', encoding='utf-8') as f:
         json.dump(evidence_data, f, indent=2)
 
     print("============================================================")
-    print(f"Evidence bundle successfully generated at: {out_file}")
+    print(f"Evidence bundle successfully generated at: {output}")
     print(f"Cryptographic SHA-256 Digest: {bundle_hash}")
     print("All verification steps PASSED with 0 warnings and 0 errors.")
     print("============================================================")

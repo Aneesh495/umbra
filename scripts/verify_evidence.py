@@ -4,6 +4,7 @@ umbra: Standalone adversarial evidence verifier and negative control suite
 Executes 12 independent negative controls and verifies cryptographic tamper-proofing.
 """
 
+import argparse
 import os
 import sys
 import json
@@ -23,7 +24,9 @@ def compute_dir_hash(root_dir: str) -> str:
 
 def main():
     root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-    bundle_path = os.path.join(root, "artifacts", "evidence_bundle.json")
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--bundle", default=os.path.join(root, "artifacts", "evidence_bundle.json"))
+    bundle_path = parser.parse_args().bundle
 
     print("============================================================")
     print("umbra: Executing 12 Adversarial Negative Controls")
@@ -93,7 +96,7 @@ def main():
     carter_b = benchmarks.get("kerr_null_geodesic_carter_invariant", {})
     if carter_b.get("value", 1.0) <= carter_b.get("tolerance", 0.001):
         passed_count += 1
-        print(f"  [PASS] NC-06: Symplectic Carter drift ({carter_b.get('value')}) within tolerance")
+        print(f"  [PASS] NC-06: Carter drift ({carter_b.get('value')}) within tolerance")
     else:
         print("  [FAIL] NC-06: Carter invariant drift exceeded bound")
 

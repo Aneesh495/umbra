@@ -67,7 +67,8 @@ contains
     end if
 
     ! Central contact speed estimate S_M from HLL average
-    sm = (sr * u_r_arr(CONS_SX + dir - 1) - sl * u_l_arr(CONS_SX + dir - 1) - (f_right(CONS_SX + dir - 1) - f_left(CONS_SX + dir - 1))) &
+    sm = (sr * u_r_arr(CONS_SX + dir - 1) - sl * u_l_arr(CONS_SX + dir - 1) &
+          - (f_right(CONS_SX + dir - 1) - f_left(CONS_SX + dir - 1))) &
          / max(sr * u_r_arr(CONS_D) - sl * u_l_arr(CONS_D) - (f_right(CONS_D) - f_left(CONS_D)), 1.0e-30_dp)
 
     ! Relativistic Alfven wave speeds S_aL and S_aR
