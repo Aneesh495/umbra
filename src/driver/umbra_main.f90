@@ -64,16 +64,16 @@ contains
   subroutine print_usage()
     write(*, '(A)') "Usage: umbra <subcommand> [options]"
     write(*, '(/, A)') "Subcommands:"
-    write(*, '(A)') "  simulate    Run 1D or 2D GRMHD shock tube or plasma vortex simulation"
+    write(*, '(A)') "  simulate    Initialize the 64x64 Orszag-Tang vortex example"
     write(*, '(A)') "  raytrace    Render Kerr black hole shadow via null geodesic integration"
     write(*, '(A)') "  benchmark   Execute analytical verification benchmarks (Sod, Brio-Wu, Shadow)"
-    write(*, '(A)') "  verify      Run deterministic self-test suite and verify conservation"
+    write(*, '(A)') "  verify      Run the built-in shock state and shadow radius checks"
     write(*, '(A)') "  version     Display version and architecture information"
     write(*, '(A)') "  help        Display this help message"
     write(*, '(/, A)') "Examples:"
     write(*, '(A)') "  umbra raytrace --spin 0.9375 --inc 60.0 --res 128 --out shadow.ppm"
     write(*, '(A)') "  umbra benchmark --problem sod"
-    write(*, '(A)') "  umbra simulate --case orszag-tang --nx 64 --ny 64"
+    write(*, '(A)') "  umbra simulate"
     write(*, '(A)') "  umbra verify"
   end subroutine print_usage
 
@@ -166,57 +166,83 @@ contains
   end subroutine run_cli_raytrace
 
   subroutine run_cli_benchmark()
-    character(len=64) :: prob_name
-    real(dp) :: max_err
-    logical :: passed
+    character(len=64) :: prob_name, option
 
     prob_name = "all"
-    if (command_argument_count() >= 2) then
+    select case (command_argument_count())
+    case (1)
+      continue
+    case (2)
       call get_command_argument(2, prob_name)
-    end if
+      if (prob_name == "--all") prob_name = "all"
+    case (3)
+      call get_command_argument(2, option)
+      if (option /= "--problem") then
+        write(*, '(A)') "Usage: umbra benchmark [all | sod | shadow | --problem NAME]"
+        stop 1
+      end if
+      call get_command_argument(3, prob_name)
+    case default
+      write(*, '(A)') "Usage: umbra benchmark [all | sod | shadow | --problem NAME]"
+      stop 1
+    end select
+    call run_benchmark_cases(trim(prob_name))
+  end subroutine run_cli_benchmark
+
+  subroutine run_benchmark_cases(prob_name)
+    character(len=*), intent(in) :: prob_name
+    logical :: shadow_passed, sod_passed, briowu_passed
+
+    shadow_passed = .true.
+    sod_passed = .true.
+    briowu_passed = .true.
 
     write(*, '(A)') "============================================================"
     write(*, '(A)') "umbra: Analytical Verification Benchmarks"
     write(*, '(A)') "============================================================"
 
-    select case (trim(prob_name))
+    select case (prob_name)
     case ("shadow", "kerr_shadow")
       write(*, '(A)') "Running Kerr Shadow Bardeen analytic verification..."
-      call verify_kerr_shadow_benchmark(0.0_dp, 90.0_dp, 32_i4, 0.25_dp, max_err, passed)
-      if (passed) then
-        write(*, '(A, E12.4, A)') "  [PASS] Schwarzschild shadow radius matches 3*sqrt(3) (error: ", max_err, ")"
-      else
-        write(*, '(A, E12.4, A)') "  [FAIL] Shadow discrepancy exceeded tolerance (error: ", max_err, ")"
-      end if
+      call verify_shadow_benchmark(shadow_passed)
 
     case ("sod")
       write(*, '(A)') "Running Relativistic Sod shock tube initial condition verification..."
-      call verify_sod_benchmark()
+      call verify_sod_benchmark(sod_passed)
 
     case ("all")
       write(*, '(A)') "[1/3] Kerr Shadow Bardeen analytic verification:"
-      call verify_kerr_shadow_benchmark(0.0_dp, 90.0_dp, 32_i4, 0.25_dp, max_err, passed)
-      if (passed) then
-        write(*, '(A, E12.4, A)') "  PASS (discrepancy: ", max_err, ")"
-      else
-        write(*, '(A, E12.4, A)') "  FAIL (discrepancy: ", max_err, ")"
-      end if
+      call verify_shadow_benchmark(shadow_passed)
 
       write(*, '(/, A)') "[2/3] Relativistic Sod shock tube verification:"
-      call verify_sod_benchmark()
+      call verify_sod_benchmark(sod_passed)
 
       write(*, '(/, A)') "[3/3] Magnetized Brio-Wu shock tube verification:"
-      call verify_briowu_benchmark()
+      call verify_briowu_benchmark(briowu_passed)
 
     case default
       write(*, '(A, A)') "Unknown benchmark problem: ", trim(prob_name)
+      stop 1
     end select
-  end subroutine run_cli_benchmark
+    if (.not. (shadow_passed .and. sod_passed .and. briowu_passed)) stop 1
+  end subroutine run_benchmark_cases
 
-  subroutine verify_sod_benchmark()
+  subroutine verify_shadow_benchmark(passed)
+    logical, intent(out) :: passed
+    real(dp) :: max_err
+
+    call verify_kerr_shadow_benchmark(0.0_dp, 90.0_dp, 64_i4, 0.25_dp, max_err, passed)
+    if (passed) then
+      write(*, '(A, E12.4, A)') "  PASS: Schwarzschild shadow radius within tolerance (discrepancy: ", max_err, ")"
+    else
+      write(*, '(A, E12.4, A)') "  FAIL: Shadow radius outside tolerance (discrepancy: ", max_err, ")"
+    end if
+  end subroutine verify_shadow_benchmark
+
+  subroutine verify_sod_benchmark(valid)
+    logical, intent(out) :: valid
     type(grid1d_t) :: grid
     type(umbra_error_t) :: err
-    logical :: valid
 
     call grid%init(100_i4, 0.0_dp, 1.0_dp)
     call init_bench_sod_1d(grid, 0.5_dp, err)
@@ -234,10 +260,10 @@ contains
     call grid%free()
   end subroutine verify_sod_benchmark
 
-  subroutine verify_briowu_benchmark()
+  subroutine verify_briowu_benchmark(valid)
+    logical, intent(out) :: valid
     type(grid1d_t) :: grid
     type(umbra_error_t) :: err
-    logical :: valid
 
     call grid%init(100_i4, 0.0_dp, 1.0_dp)
     call init_bench_briowu_1d(grid, 0.5_dp, err)
@@ -282,17 +308,8 @@ contains
   end subroutine run_cli_simulate
 
   subroutine run_cli_verify()
-    write(*, '(A)') "============================================================"
-    write(*, '(A)') "umbra: Comprehensive Self-Verification Suite"
-    write(*, '(A)') "============================================================"
-    write(*, '(A)') "Checking IEEE-754 precision kinds...        [PASS]"
-    write(*, '(A)') "Checking Kerr-Schild metric determinant...  [PASS]"
-    write(*, '(A)') "Checking Synge EOS relativistic enthalpy... [PASS]"
-    write(*, '(A)') "Checking HLLD magnetized Riemann flux...    [PASS]"
-    write(*, '(A)') "Checking GLM divergence damping operator... [PASS]"
-    write(*, '(A)') "Checking Carter constant conservation...    [PASS]"
-    write(*, '(A)') "------------------------------------------------------------"
-    write(*, '(A)') "All kernel self-tests PASSED (100% deterministic verification)."
+    call run_benchmark_cases("all")
+    write(*, '(A)') "All three built-in benchmark checks passed."
   end subroutine run_cli_verify
 
 end program umbra_main
