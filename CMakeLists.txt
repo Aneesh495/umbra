@@ -143,3 +143,8 @@ set_target_properties(test_negative_controls PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/bin
 )
 add_test(NAME NegativeControls COMMAND test_negative_controls)
+
+add_test(NAME CliVerify COMMAND umbra_bin verify)
+set_tests_properties(CliVerify PROPERTIES PASS_REGULAR_EXPRESSION "All three built-in benchmark checks passed")
+add_test(NAME CliRejectUnknownBenchmark COMMAND umbra_bin benchmark --problem unknown)
+set_tests_properties(CliRejectUnknownBenchmark PROPERTIES WILL_FAIL TRUE)

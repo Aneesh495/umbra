@@ -77,11 +77,11 @@ flowchart TD
 
 | Benchmark Problem | Domain & Dimensions | Numerical Methods | Quantitative Verification Target | Status |
 | :--- | :--- | :--- | :--- | :--- |
-| **Relativistic Sod Shock** | 1D Gas Dynamics ($N=200$) | SSPRK3 + DG + HLLC | Mass conservation error $< 10^{-12}$ | **PASS** |
-| **Magnetized Brio-Wu** | 1D Relativistic MHD ($N=200$) | SSPRK3 + HLLD + TVD | Transverse jump $\Delta B_y = 2.0$ | **PASS** |
-| **Orszag-Tang Vortex** | 2D Supersonic MHD ($64 \times 64$) | DG + GLM Divergence Cleaner | Divergence bound $\max |\nabla \cdot \mathbf{B}| \le 10^{-12}$ | **PASS** |
-| **Kerr Carter Invariant** | Kerr Spacetime ($a=0.9375$) | Symplectic Hamiltonian RK4 | Carter invariant drift $|\Delta Q / Q_0| < 3 \times 10^{-5}$ | **PASS** |
-| **Black Hole Shadow** | Celestial Observer Screen | Ray-traced Pinhole Camera | Discrepancy from Bardeen formula $< 0.33 M$ | **PASS** |
+| **Relativistic Sod Shock** | 1D gas dynamics, 200 cells | Shock-tube initialization | Left and right densities match the benchmark and initial mass is positive | **PASS** |
+| **Magnetized Brio-Wu** | 1D relativistic MHD, 200 cells | Magnetized shock-tube initialization | Transverse jump $\Delta B_y = 2.0$ | **PASS** |
+| **Orszag-Tang Vortex** | 2D MHD, $64 \times 64$ cells | Centered divergence of the initial magnetic field | Maximum absolute divergence below $10^{-10}$ | **PASS** |
+| **Kerr Carter Invariant** | Kerr spacetime, $a=0.9375$ | 50-step RK4 null geodesic check | Absolute fractional Carter drift below $10^{-3}$ | **PASS** |
+| **Black Hole Shadow** | Schwarzschild, 48-pixel ray-tracing grid | Ray-traced shadow radius | Discrepancy from the analytic radius at most $0.40 M$ | **PASS** |
 
 ---
 
@@ -122,8 +122,8 @@ cmake --build .
 
 `umbra` includes three verification tiers:
 1. **Unit Test Suite**: 70 granular mathematical and physics assertions across 8 test suites.
-2. **Acceptance Test Suite**: 5 full end-to-end relativistic physics benchmarks.
-3. **Negative Controls Suite**: 12 adversarial tests auditing payload signatures, tamper rejection, unphysical parameter bounds, and code style compliance.
+2. **Acceptance Test Suite**: Five checks of initial conditions, geodesic invariants, and shadow radius.
+3. **Negative Controls Suite**: 12 checks of evidence digests, physical bounds, and code style.
 
 Run the entire verification pipeline with a single command:
 
@@ -164,19 +164,16 @@ The unified `umbra` CLI provides subcommands for simulation execution, geodesic 
 # Display help and available subcommands
 ./bin/umbra --help
 
-# Run the Relativistic Sod Shock Tube simulation
-./bin/umbra sim --problem sod --resolution 200 --tmax 0.4
-
-# Run the 2D Relativistic Orszag-Tang Vortex with GLM divergence cleaning
-./bin/umbra sim --problem orszag-tang --resolution 64 --tmax 1.0
+# Initialize the 64x64 Orszag-Tang vortex grid and report its bounds
+./bin/umbra simulate
 
 # Render a Kerr black hole shadow (spin a=0.9375, inclination 60 degrees)
-./bin/umbra raytrace --spin 0.9375 --inclination 60.0 --resolution 128 --output shadow.vtk
+./bin/umbra raytrace --spin 0.9375 --inc 60.0 --res 16 --out shadow.ppm
 
-# Execute built-in acceptance benchmarks
-./bin/umbra benchmark --all
+# Check one built-in benchmark's initial conditions
+./bin/umbra benchmark --problem sod
 
-# Execute cryptographic verification pass
+# Run all three built-in benchmark checks
 ./bin/umbra verify
 ```
 
