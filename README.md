@@ -6,7 +6,7 @@
 [![Unit Tests](https://img.shields.io/badge/Unit_Tests-70%2F70_Passing-brightgreen.svg)](tests/unit/)
 [![Acceptance Tests](https://img.shields.io/badge/Acceptance-5%2F5_Passing-brightgreen.svg)](tests/acceptance/)
 [![Negative Controls](https://img.shields.io/badge/Negative_Controls-12%2F12_Verified-brightgreen.svg)](scripts/verify_evidence.py)
-[![Verification](https://img.shields.io/badge/SHA--256-Cryptographically_Signed-blue.svg)](artifacts/evidence_bundle.json)
+[![Verification](https://img.shields.io/badge/SHA--256-Evidence_Digest-blue.svg)](artifacts/evidence_bundle.json)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
 A high-order Discontinuous Galerkin (DG) General Relativistic Magnetohydrodynamics (GRMHD) kernel and Kerr spacetime radiative transfer engine implemented in modern Fortran (Fortran 2008/2018), accompanied by an ANSI C application binary interface and zero-copy Python bindings.
@@ -90,7 +90,7 @@ flowchart TD
 ### Prerequisites
 - Modern Fortran compiler with Fortran 2018 support: `gfortran` (version 12+) or LLVM `flang`.
 - GNU Make or CMake (3.20+).
-- Python 3.10+ (for bindings and verification scripts).
+- Python 3.10+ and NumPy for bindings and verification scripts.
 
 ### Building umbra
 Clone the repository and compile using Make:
@@ -100,6 +100,8 @@ git clone https://github.com/Aneesh495/umbra.git
 cd umbra
 make all
 ```
+
+The Makefile uses `gfortran` and `python3` by default. Set `FC` or `PYTHON` to select a different executable.
 
 This compiles:
 - `lib/libumbra.dylib` (or `lib/libumbra.so` on Linux): Native C-compatible shared library.
@@ -129,17 +131,12 @@ Run the entire verification pipeline with a single command:
 make test
 ```
 
+The test target creates a temporary evidence bundle from the current test output and verifies its digest, source hash, and measurements. The recorded bundle under `artifacts/` remains available for its original source revision.
+
 Expected output:
 ```text
-=== Running unit test suite (70 assertions) ===
-OVERALL RESULT: 70 tests (70 passed, 0 failed)
->>> ALL UNIT TESTS PASSED SUCCESSFULLY <<<
-
-=== Running acceptance integration test suite (5 benchmarks) ===
->>> ALL ACCEPTANCE TESTS PASSED (100% PHYSICS VERIFICATION) <<<
-
-=== Running negative defensive test suite (6 traps) ===
->>> ALL KERNEL NEGATIVE CONTROLS PASSED <<<
+[1/2] Running Unit Test Suite (70 deterministic assertions)...
+[2/2] Running Acceptance Physics Suite (5 integration benchmarks)...
 
 === Running 12 adversarial negative controls verification ===
   [PASS] NC-01: Cryptographic SHA-256 digest signature matches payload exactly
@@ -147,7 +144,7 @@ OVERALL RESULT: 70 tests (70 passed, 0 failed)
   [PASS] NC-03: Live source code tree matches bundle digest bit-for-bit
   [PASS] NC-04: Unit test pass rate is 100% (70/70 assertions)
   [PASS] NC-05: Acceptance integration pass rate is 100% (5/5 benchmarks)
-  [PASS] NC-06: Symplectic Carter drift within tolerance
+  [PASS] NC-06: Carter drift within tolerance
   [PASS] NC-07: Magnetic divergence strictly within bound
   [PASS] NC-08: Ray-traced shadow discrepancy within bound
   [PASS] NC-09: Python KerrSpacetime rejects unphysical super-extremal spin a > 1

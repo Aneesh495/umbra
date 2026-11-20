@@ -29,15 +29,20 @@ module umbra_rk_dopri5
   real(dp), parameter :: a21 = 1.0_dp / 5.0_dp
   real(dp), parameter :: a31 = 3.0_dp / 40.0_dp,        a32 = 9.0_dp / 40.0_dp
   real(dp), parameter :: a41 = 44.0_dp / 45.0_dp,       a42 = -56.0_dp / 15.0_dp,     a43 = 32.0_dp / 9.0_dp
-  real(dp), parameter :: a51 = 19372.0_dp / 6561.0_dp,  a52 = -25360.0_dp / 2187.0_dp, a53 = 64448.0_dp / 6561.0_dp, a54 = -212.0_dp / 729.0_dp
-  real(dp), parameter :: a61 = 9017.0_dp / 3168.0_dp,   a62 = -355.0_dp / 33.0_dp,    a63 = 46732.0_dp / 5247.0_dp, a64 = 49.0_dp / 176.0_dp, a65 = -5103.0_dp / 18656.0_dp
-  real(dp), parameter :: a71 = 35.0_dp / 384.0_dp,      a73 = 500.0_dp / 1113.0_dp,   a74 = 125.0_dp / 192.0_dp,    a75 = -2187.0_dp / 6784.0_dp, a76 = 11.0_dp / 84.0_dp
+  real(dp), parameter :: a51 = 19372.0_dp / 6561.0_dp, a52 = -25360.0_dp / 2187.0_dp, &
+                         a53 = 64448.0_dp / 6561.0_dp, a54 = -212.0_dp / 729.0_dp
+  real(dp), parameter :: a61 = 9017.0_dp / 3168.0_dp, a62 = -355.0_dp / 33.0_dp, &
+                         a63 = 46732.0_dp / 5247.0_dp, a64 = 49.0_dp / 176.0_dp, a65 = -5103.0_dp / 18656.0_dp
+  real(dp), parameter :: a71 = 35.0_dp / 384.0_dp, a73 = 500.0_dp / 1113.0_dp, &
+                         a74 = 125.0_dp / 192.0_dp, a75 = -2187.0_dp / 6784.0_dp, a76 = 11.0_dp / 84.0_dp
 
   ! 5th-order solution weights
-  real(dp), parameter :: b1 = 35.0_dp / 384.0_dp,       b3 = 500.0_dp / 1113.0_dp,    b4 = 125.0_dp / 192.0_dp,     b5 = -2187.0_dp / 6784.0_dp, b6 = 11.0_dp / 84.0_dp
+  real(dp), parameter :: b1 = 35.0_dp / 384.0_dp, b3 = 500.0_dp / 1113.0_dp, &
+                         b4 = 125.0_dp / 192.0_dp, b5 = -2187.0_dp / 6784.0_dp, b6 = 11.0_dp / 84.0_dp
 
   ! 4th-order solution weights for error estimation: e_i = b_i - bhat_i
-  real(dp), parameter :: e1 = 71.0_dp / 57600.0_dp,     e3 = -71.0_dp / 16695.0_dp,   e4 = 71.0_dp / 1920.0_dp,     e5 = -17253.0_dp / 339200.0_dp, e6 = 22.0_dp / 525.0_dp, e7 = -1.0_dp / 40.0_dp
+  real(dp), parameter :: e1 = 71.0_dp / 57600.0_dp, e3 = -71.0_dp / 16695.0_dp, e4 = 71.0_dp / 1920.0_dp, &
+                         e5 = -17253.0_dp / 339200.0_dp, e6 = 22.0_dp / 525.0_dp, e7 = -1.0_dp / 40.0_dp
 
 contains
 

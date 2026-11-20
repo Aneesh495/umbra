@@ -1,0 +1,19 @@
+name: Fortran verification
+
+on: [push, pull_request]
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+      - run: sudo apt-get update && sudo apt-get install -y gfortran
+      - run: python -m pip install numpy
+      - run: make all
+      - run: make test
