@@ -9,7 +9,7 @@ jobs:
   verify:
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: actions/setup-python@v6
         with:
           python-version: '3.12'
@@ -20,7 +20,7 @@ jobs:
   cmake:
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - run: sudo apt-get update && sudo apt-get install -y gfortran ninja-build
       - run: cmake -S . -B build -G Ninja
       - run: cmake --build build --parallel 4
